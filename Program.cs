@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using MySql.Data.MySqlClient;
+using SingleStoreConnector;
 
 namespace SingleStoreExample
 {
@@ -24,10 +24,11 @@ namespace SingleStoreExample
 
         public static void Main()
         {
-            IDbConnection conn = new MySqlConnection();
+            var connectionString = $"Server={HOST};Port={PORT};Uid={USER};Pwd={PASSWORD};Database={DATABASE};";
+            var conn = new SingleStoreConnection(connectionString);
+    
             try
             {
-                conn.ConnectionString = $"Server={HOST};Port={PORT};Uid={USER};Pwd={PASSWORD};Database={DATABASE};";
                 conn.Open();
 
                 long id = Create(conn, "Inserted row");
@@ -55,6 +56,7 @@ namespace SingleStoreExample
                 }
 
                 Delete(conn, id);
+                Console.WriteLine($"Deleted row id {id}");
             }
             catch (Exception ex)
             {
@@ -74,7 +76,7 @@ namespace SingleStoreExample
 
             cmd.CommandText = "INSERT INTO messages (content) VALUES (@content); select last_insert_id();";
             cmd.CommandType = CommandType.Text;
-            cmd.Parameters.Add(new MySqlParameter("@content", MySqlDbType.String, 300) { Value = content });
+            cmd.Parameters.Add(new SingleStoreParameter("@content", SingleStoreDbType.String, 300) { Value = content });
 
             ulong id = (ulong)cmd.ExecuteScalar();
             cmd.Parameters.Clear(); // reusing this command? clean up the parameters.
@@ -88,7 +90,7 @@ namespace SingleStoreExample
 
             cmd.CommandText = "SELECT * FROM messages where id = @id;";
             cmd.CommandType = CommandType.Text;
-            cmd.Parameters.Add(new MySqlParameter("@id", MySqlDbType.Int64) { Value = id });
+            cmd.Parameters.Add(new SingleStoreParameter("@id", SingleStoreDbType.Int64) { Value = id });
 
             Message result = null;
             using (IDataReader reader = cmd.ExecuteReader())
@@ -136,8 +138,8 @@ namespace SingleStoreExample
             IDbCommand cmd = conn.CreateCommand();
             cmd.CommandText = "UPDATE messages SET content = @content where id = @id;";
             cmd.CommandType = CommandType.Text;
-            cmd.Parameters.Add(new MySqlParameter("@content", MySqlDbType.VarChar, 300) { Value = content });
-            cmd.Parameters.Add(new MySqlParameter("@id", MySqlDbType.Int64) { Value = id });
+            cmd.Parameters.Add(new SingleStoreParameter("@content", SingleStoreDbType.VarChar, 300) { Value = content });
+            cmd.Parameters.Add(new SingleStoreParameter("@id", SingleStoreDbType.Int64) { Value = id });
 
             int rows = cmd.ExecuteNonQuery();
 
@@ -149,7 +151,7 @@ namespace SingleStoreExample
             IDbCommand cmd = conn.CreateCommand();
             cmd.CommandText = "DELETE FROM messages where id = @id;";
             cmd.CommandType = CommandType.Text;
-            cmd.Parameters.Add(new MySqlParameter("@id", MySqlDbType.Int64) { Value = id });
+            cmd.Parameters.Add(new SingleStoreParameter("@id", SingleStoreDbType.Int64) { Value = id });
 
             int rows = cmd.ExecuteNonQuery();
 
